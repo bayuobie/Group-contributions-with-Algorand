@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <script src="scripts/algosdk.min.js"></script>
+    
+  </script>
+  </head>
+
+  <body>
+   
+  </body>
+
+</script>
+  
+  <script>
+
+const url = "https://api.testnet.algoexplorer.io/v2/transactions/params";
+const traxUrl = "https://api.testnet.algoexplorer.io/v2/transactions";
+        
+ var mnemonic1 = "hood size youth drop avoid soft grant city frown benefit bamboo result rhythm pen salute drastic mimic tonight taxi possible suggest gadget clog absorb cement";
+ let account1 = algosdk.mnemonicToSecretKey(mnemonic1);
+
+   var mnemonic2 = "side kidney book discover amused grunt anchor run vessel insane melody violin entire dynamic cloth fog dry deputy process since barely brass tuna absorb crawl";
+let account2 = algosdk.mnemonicToSecretKey(mnemonic2);
+
+ var mnemonic3 = "mask win crawl story crime piece own seed deny empower action breeze solar ladder urge sick rival wrestle invite exclude profit elegant life abstract large";
+let account3 = algosdk.mnemonicToSecretKey(mnemonic3);
+
+   var mnemonic4 = "wood clump category carpet cabin cement joy cover this hour armor twist write trade term only label later lizard disease boil pelican dish ability this";
+let account4 = algosdk.mnemonicToSecretKey(mnemonic4);
+   //create an account
+   var mnemonic5 = "board foil trophy carbon cluster property once antique joy hand acquire exclude decide riot inside case toilet recall rotate ensure draft disease ugly abstract vote";
+let account5 = algosdk.mnemonicToSecretKey(mnemonic5);
+
+   //Setup the parameters for the multisig corporate account. In the constitution, 80% of members must sign to issue transactions
+   var totalAccounts = 5 //this could refer to the array length from a db or a text file
+    var threshold = .8*totalAccounts;
+
+   const mparams = {
+       version: 1,
+       threshold: threshold,
+       addrs: [
+           account1,
+           account2,
+           account3,
+           account4,
+           account5,
+       ],
+   };
+
+   multsigaddr ="3KQWGPDWC42XGONG6D7U4S64ZIBWDQHB642GNHPG5EUKMR2JLC6FE2NBTU";
+
+   if(!multsigaddr){ 
+   var multsigaddr = algosdk.multisigAddress(mparams);
+
+   }
+ 
+   mparams.addrs.forEach(function (items, index) {
+ payer = items.addr;
+  let payNote = new Uint8Array("Transaction : " + items.addr);
+  var amount = 2000000; //amount to deduct from each member into the corporative multisig account
+  recipient = multsigaddr
+  //setTimeout(()=> { 
+makePayments (payer, recipient,amount, payNote,items);
+//}, 2000);
+
+});
+
+//Process future payments with multisig
+//process payment from the group account with 80% of members signing. Each month or week or day
+//the group can decide pay 60% of the corporative funds to each individual in a rotational manner each month. The first recipient won't be paid until the circle completes
+//In this example, after the first individual is paid, the users is exempted from future payments slots left. The remaining users will be randomly selected          
+
+//the multisignature account needs a threshhold of 80% from the corporative to sign a transaction. Select random 80% to sign. We already calculated 
+//that above
+
+var randomShuffled = mparams.addrs.sort(() => 0.5 - Math.random());
+
+let selected = randomShuffled.slice(0, 5);
+var multisigSigners = []; 
+selected.forEach(function (itemPay) {
+
+  multisigSigners.push(itemPay.addr);
+});
+
+   const mparamsAccount = {
+       version: 1,
+       threshold: threshold,
+       addrs:multisigSigners,
+   };
+
+   //Assuming 2 members of the savings union received their share of the payments in the last 2 months. The programme will randomly select any of the
+//3 remaining members
+           
+receivingAccount =  {addrs:[account3.addr,account4.addr,account5.addr],};
+
+let selectedSigners = randomShuffled.slice(0, threshold);
+
+const shuffled = receivingAccount.addrs.sort(() => 0.5 - Math.random());
+var PayoutRecipient = shuffled.slice(0,1);
+//console.log(PayoutRecipient[0]);
+
+
+// getcorporative account balance
+amountUrl = "https://api.testnet.algoexplorer.io/v2/accounts/"+multsigaddr;
+
+              var json_obj = JSON.parse(Get(amountUrl));
+             accountBal = json_obj.amount/1000000;
+              console.log(accountBal);
+            
+  //pay 60% of coorperative balance to the selected member
+
+amountToPay = Math.round(.6*accountBal*1000000);
+
+if (amountToPay>accountBal){alert("You don't have enough funds")}
+
+//the multisignature account needs a threshhold of 80% to sieng a transaction. Select random 4 members from the corporative
+
+
+
+//get first and last round params
+getParams = JSON.parse(Get(url)); 
+
+var txn = {
+     "to": PayoutRecipient[0],
+    "fee": getParams.fee,
+    "amount": 200000,
+    "firstRound": getParams["last-round"],
+    "lastRound": getParams["last-round"] + 1000,
+    "genesisID": getParams["genesis-id"],
+  "genesisHash": getParams["genesis-hash"],
+   "note": new Uint8Array(0)
+
+  };
+
+
+var arr= [];
+
+//let each account sign the transactons
+selectedSigners.forEach(function (itemPay, index,array) {
+
+ let signedTxnMerge = algosdk.signMultisigTransaction(txn, mparamsAccount, itemPay.sk).blob
+
+arr.push(signedTxnMerge);
+
+ if (index === array.length - 1){
+
+  let mergedTsigTxn2 = algosdk.mergeMultisigTransactions(arr);
+  fetch(traxUrl, {
+    method: 'POST', 
+      headers: {
+    'Content-Type': 'application/x-binary',
+     },
+      body: mergedTsigTxn2,
+     })
+    .then(response => response.json())
+    .then(data => {
+     console.log(data);
+      
+     })
+     .catch((error) => {
+      console.error('Error:', error);
+   });
+      
+   }
+
+});
+
+  // console.log(suggestedParams);
+
+
+  function Get(yourUrl){
+    var Httpreq = new XMLHttpRequest(); // a new request
+    Httpreq.open("GET",yourUrl,false);
+    Httpreq.send(null);
+    return Httpreq.responseText;          
+}
+
+
+function makePayments (payer, recipient, amount, payNote,items){           
+
+     
+     params = JSON.parse(Get(url)); 
+    params.fee= 1000;
+
+   let suggestedParams = {
+       "flatFee": true,
+       "fee": params.fee,
+       "firstRound":  params["last-round"],
+       "lastRound": params["last-round"] + 1000,
+       "genesisID": params["genesis-id"],
+       "genesisHash": params["genesis-hash"],
+     
+   };
+
+    let txn = algosdk.makePaymentTxnWithSuggestedParams(payer, recipient, amount, undefined, payNote, suggestedParams);
+     let signedTxnFirst = txn.signTxn(items.sk);
+   
+   fetch(traxUrl, {
+      method: 'POST', 
+       headers: {
+        'Content-Type': 'application/x-binary',
+       },
+       body: signedTxnFirst,
+     })
+     .then(response => response.json())
+     .then(data => {
+      
+     })
+     .catch((error) => {
+       console.error('Error:', error);
+     });
+      
+
+
+}
+
+</script>
+</html>
