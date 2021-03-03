@@ -13,3 +13,7 @@ Currently, individuals who want to operate a co-operative or group savings accou
 
 The tutorial demonstrates how to process transactions via HTTP request which won't require an Algorand Node or any third-party API account. This is ideal for developers who want to build using any programming language. It also helps new developers who are not able to set up a node but want to build apps on the chain, do so. Instantiating the client will require a PureStake account or a node set up to do so
 For instance when you use let algodclient = new algosdk.Algodv2(token, server, port);, the developer is required to have a server url, token and port. However, with the API, you are faster in building apps and most developers are familiar with APIs and can get started with Algorand without needed tokens and server ports.
+
+You can follow the full tutorial here:
+
+https://github.com/bayuobie/Group-contributions-with-Algorand/blob/main/multisigPay.html
