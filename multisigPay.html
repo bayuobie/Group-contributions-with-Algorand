@@ -21,24 +21,27 @@
 const url = "https://api.testnet.algoexplorer.io/v2/transactions/params";
 const traxUrl = "https://api.testnet.algoexplorer.io/v2/transactions";
         
- var mnemonic1 = "hood size youth drop avoid soft grant city frown benefit bamboo result rhythm pen salute drastic mimic tonight taxi possible suggest gadget clog absorb cement";
- let account1 = algosdk.mnemonicToSecretKey(mnemonic1);
+var mnemonic1 = "hood size youth drop avoid soft grant city frown benefit bamboo result rhythm pen salute drastic mimic tonight taxi possible suggest gadget clog absorb cement";
+  let account1 = algosdk.mnemonicToSecretKey(mnemonic1);
+  //console.log(account1);
+  var mnemonic2 = "side kidney book discover amused grunt anchor run vessel insane melody violin entire dynamic cloth fog dry deputy process since barely brass tuna absorb crawl";
+  let account2 = algosdk.mnemonicToSecretKey(mnemonic2);
+ // console.log(account2);
+  var mnemonic3 = "mask win crawl story crime piece own seed deny empower action breeze solar ladder urge sick rival wrestle invite exclude profit elegant life abstract large";
+  let account3 = algosdk.mnemonicToSecretKey(mnemonic3);
+ // console.log(account3);
+  var mnemonic4 = "wood clump category carpet cabin cement joy cover this hour armor twist write trade term only label later lizard disease boil pelican dish ability this";
+  let account4 = algosdk.mnemonicToSecretKey(mnemonic4);
+ // console.log(account4);
+  //create an account
+  var mnemonic5 = "board foil trophy carbon cluster property once antique joy hand acquire exclude decide riot inside case toilet recall rotate ensure draft disease ugly abstract vote";
+  let account5 = algosdk.mnemonicToSecretKey(mnemonic5);
+ // console.log(account5);
 
-   var mnemonic2 = "side kidney book discover amused grunt anchor run vessel insane melody violin entire dynamic cloth fog dry deputy process since barely brass tuna absorb crawl";
-let account2 = algosdk.mnemonicToSecretKey(mnemonic2);
-
- var mnemonic3 = "mask win crawl story crime piece own seed deny empower action breeze solar ladder urge sick rival wrestle invite exclude profit elegant life abstract large";
-let account3 = algosdk.mnemonicToSecretKey(mnemonic3);
-
-   var mnemonic4 = "wood clump category carpet cabin cement joy cover this hour armor twist write trade term only label later lizard disease boil pelican dish ability this";
-let account4 = algosdk.mnemonicToSecretKey(mnemonic4);
-   //create an account
-   var mnemonic5 = "board foil trophy carbon cluster property once antique joy hand acquire exclude decide riot inside case toilet recall rotate ensure draft disease ugly abstract vote";
-let account5 = algosdk.mnemonicToSecretKey(mnemonic5);
 
    //Setup the parameters for the multisig corporate account. In the constitution, 80% of members must sign to issue transactions
    var totalAccounts = 5 //this could refer to the array length from a db or a text file
-    var threshold = .8*totalAccounts;
+    var threshold = 4;
 
    const mparams = {
        version: 1,
@@ -58,6 +61,7 @@ let account5 = algosdk.mnemonicToSecretKey(mnemonic5);
    var multsigaddr = algosdk.multisigAddress(mparams);
 
    }
+   console.log(multsigaddr);
  
    mparams.addrs.forEach(function (items, index) {
  payer = items.addr;
@@ -113,8 +117,8 @@ amountUrl = "https://api.testnet.algoexplorer.io/v2/accounts/"+multsigaddr;
               console.log(accountBal);
             
   //pay 60% of coorperative balance to the selected member
+amountToPay = Math.round(.6*accountBal);
 
-amountToPay = Math.round(.6*accountBal*1000000);
 
 if (amountToPay>accountBal){alert("You don't have enough funds")}
 
@@ -124,25 +128,39 @@ if (amountToPay>accountBal){alert("You don't have enough funds")}
 
 //get first and last round params
 getParams = JSON.parse(Get(url)); 
+var note=  new Uint8Array(0);
+var params = {
 
-var txn = {
-     "to": PayoutRecipient[0],
-    "fee": getParams.fee,
-    "amount": 200000,
-    "firstRound": getParams["last-round"],
-    "lastRound": getParams["last-round"] + 1000,
-    "genesisID": getParams["genesis-id"],
-  "genesisHash": getParams["genesis-hash"],
-   "note": new Uint8Array(0)
+        "fee": getParams.fee,
+        "firstRound": getParams["last-round"],
+        "lastRound": getParams["last-round"] + 1000,
+        "genesisID": getParams["genesis-id"],
+        "genesisHash": getParams["genesis-hash"]
 
-  };
+
+};
+//var txn = {
+  //   "to": PayoutRecipient[0],
+   // "fee": getParams.fee,
+   // "amount": 200000,
+   // "firstRound": getParams["last-round"],
+//"lastRound": getParams["last-round"] + 1000,
+   // "genesisID": getParams["genesis-id"],
+ // "genesisHash": getParams["genesis-hash"],
+  // "note": new Uint8Array(0)
+
+ // };
 
 
 var arr= [];
 
 //let each account sign the transactons
 selectedSigners.forEach(function (itemPay, index,array) {
+  console.log(multsigaddr);
 
+   let txn = algosdk.makePaymentTxnWithSuggestedParams(multsigaddr,PayoutRecipient[0], 2000000, undefined, note, params);
+
+   console.log(txn);
  let signedTxnMerge = algosdk.signMultisigTransaction(txn, mparamsAccount, itemPay.sk).blob
 
 arr.push(signedTxnMerge);
